@@ -408,7 +408,7 @@ class EBB3:
         # and wait for a response
         response = ""
         n_retry_count = 0
-        while response[-1] != "\n"  and n_retry_count < self.readline_retry_max:
+        while (len(response) == 0 or response[-1] != "\n") and n_retry_count < self.readline_retry_max:
             # get new response to replace null response if necessary
             response = response + self.port.readline().decode('ascii').strip()
             n_retry_count += 1
