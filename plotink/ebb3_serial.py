@@ -316,7 +316,7 @@ class EBB3:
                 return False
         except (serial.SerialException, IOError, RuntimeError, OSError):
             if cmd_name.lower() not in ["rb", "r", "bl"]: # Ignore err on these commands
-                error_msg = f'USB communication error after command: {cmd}'
+                error_msg = f'USB communication error after command: {cmd}' + sys.exc_info()[1] + sys.exc_info()[2]
                 self.record_error(error_msg)
 
         self._check_and_record_ebb_error(response, 'Command', cmd)
@@ -353,7 +353,7 @@ class EBB3:
                 return None
         except (serial.SerialException, IOError, RuntimeError, OSError):
             if qry_name.lower() not in ["rb", "r", "bl"]: # Ignore err on these commands
-                error_msg = f'USB communication error after query: {qry}'
+                error_msg = f'USB communication error after query: {qry}' + sys.exc_info()[1] + sys.exc_info()[2]
                 self.record_error(error_msg)
                 return None
 
@@ -381,8 +381,8 @@ class EBB3:
             response = self._send_request('query', 'QG', 'QG')
             if response is None:
                 return None
-        except (serial.SerialException, IOError, RuntimeError, OSError):
-            error_msg = 'USB communication error after status byte query'
+        except (serial.SerialException, IOError, RuntimeError, OSError) as err:
+            error_msg = 'USB communication error after status byte query:' + sys.exc_info()[1] + sys.exc_info()[2]
             self.record_error(error_msg)
             return None
 
