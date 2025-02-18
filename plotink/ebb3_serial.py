@@ -414,7 +414,7 @@ class EBB3:
             n_retry_count += 1
 
         # Special case: Try again _once_ if command has syntax error.
-        if response[0:6] == '!8 Err':
+        if '!8 Err' in response:
             logging.error(f'received unexpected response, trying one more readline. from {type}: {request}. (response: {response})')
             response = self.port.readline().decode('ascii').strip()
             logging.error(f'now the response is: {response}')
