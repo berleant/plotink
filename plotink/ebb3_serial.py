@@ -425,7 +425,7 @@ class EBB3:
             if num_tries > 1:
                 logging.error(f'retrying {type}: {request} (response was "{response}"')
                 self.retry_count += 1
-                self._send_request(type, request, request_name, num_tries - 1)
+                response = self._send_request(type, request, request_name, num_tries - 1)
             else: # base case; num_tries == 1 (or less but that would be silly)
                 if response:
                     error_msg = '\nUnexpected response from EBB.' +\
