@@ -50,7 +50,7 @@ class EBB3:
     ''' EBB3: Class for managing EiBotBoard connectivity '''
 
     MIN_VERSION_STRING = "3.0.2"    # Minimum supported EBB firmware version.
-    readline_retry_max = 25
+    readline_retry_max = 40
 
     def __init__(self):
         self.port_name = None       # Port name (enumeration), if any
@@ -123,6 +123,7 @@ class EBB3:
         ''' Record error, if it is the first error '''
         if self.err is None:
             self.err = message
+            logging.error(message)
 
 
     def _get_port_name(self, given_name=None):
@@ -412,11 +413,17 @@ class EBB3:
             response = self.port.readline().decode('ascii').strip()
             n_retry_count += 1
 
+        # Special case: Try again _once_ if command has syntax error.
+        if response[0:6] == '!8 Err':
+            logging.error(f'received unexpected response, trying one more readline. from {type}: {request}. (response: {response})')
+            response = self.port.readline().decode('ascii').strip()
+            logging.error(f'now the response is: {response}')
+
         # evaluate that response
         # if the response is unexpected or empty, recursively try again according to `num_tries`
         if not response.startswith(request_name):
             if num_tries > 1:
-                logging.error(f'retrying {type}: {request}')
+                logging.error(f'retrying {type}: {request} (response was "{response}"')
                 self.retry_count += 1
                 self._send_request(type, request, request_name, num_tries - 1)
             else: # base case; num_tries == 1 (or less but that would be silly)
