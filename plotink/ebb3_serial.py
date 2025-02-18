@@ -432,8 +432,8 @@ class EBB3:
                        f'    Command: {request}\n    Response: {response}'
                 else:
                     error_msg = f'EBB Serial Timeout after {type}: {request}'
-                self.record_error(error_msg)
-                return None
+            self.record_error(error_msg)
+            return None
         return response
 
     def _check_and_record_ebb_error(self, response, type, request):
