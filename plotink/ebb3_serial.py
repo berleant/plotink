@@ -415,6 +415,8 @@ class EBB3:
 
         if response[-1] != "\n":
            logging.error(f'readline did not return full line. according to pyserial docs, since the last character of the response is not a newline, there was a timeout and we received a partial response. The response is \"{response}\"')
+        else:
+            logging.error(f'readline returned full line: {response}')
 
         # Special case: Try again _once_ if command has syntax error.
         if '!8 Err' in response:
