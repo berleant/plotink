@@ -458,7 +458,7 @@ class EBB3:
             return response
         else: # base case
             self.record_error('\nEBB Serial Error.' +\
-                f'    Command: {request}\n    {error_type}: {response}'
+                f'    Command: {request}\n    {error_type}: {response}')
             return None
 
     def _check_and_record_ebb_error(self, response, type, request):
