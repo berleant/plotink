@@ -426,8 +426,9 @@ class EBB3:
         if len(responses) == 0:
             raise RuntimeError(f'Timed out with no response after {n_retry_count} tries.')
 
-        logging.error(f'{responses}')
-        response = responses[-1].decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
+        while len(response) == 0:
+            response = responses.pop().decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
+            logging.error(f'{response}')
 
         if not response.startswith(request_name):
             raise RuntimeError(f'Received unexpected response after {n_retry_count} tries.')
