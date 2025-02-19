@@ -424,8 +424,8 @@ class EBB3:
                 response = response + self.port.readline.decode('ascii')
                 n_retry_count += 1
 
-         if self.port.in_waiting > 0:
-             logging.error('IN_WAITING > 0')
+        if self.port.in_waiting > 0:
+            logging.error('IN_WAITING > 0')
 
          # four possibilities now
          # len(response) == 0, aka a classic timeout
