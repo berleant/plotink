@@ -416,8 +416,8 @@ class EBB3:
         # and wait for a response
         responses = []
         n_retry_count = 0
-        # poll for response until we run out of retries or self.port indicates there is no more input # TODO adjust/tune retries and timeout params
-        while self.port.in_waiting > 0 and n_retry_count < self.readline_retry_max:
+        # poll for response until we get any response and self.port indicates there is no more input, a maximum of self.readline_retry_max times  # TODO adjust/tune retries and timeout params
+        while (len(response) == 0 or self.port.in_waiting > 0) and n_retry_count < self.readline_retry_max:
             responses += self.port.readlines()
             n_retry_count += 1
 
