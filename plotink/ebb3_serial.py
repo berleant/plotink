@@ -424,8 +424,10 @@ class EBB3:
 
         # evaluate the responses
         response = ''
+        logging.error(responses)
         while len(response) == 0 and len(responses) != 0:
             response = responses.pop().decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
+        logging.error(response)
 
         if len(response) == 0 and len(responses) == 0:
             raise RuntimeError(f'Timed out with no response (or empty responses) after {n_retry_count} tries.')
