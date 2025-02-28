@@ -417,6 +417,7 @@ class EBB3:
                 responses[-1] += in_bytes
 
         # evaluate the responses
+        num_received_lines = len(responses)
         response = ''
         while len(response) == 0 and len(responses) != 0:
             response = responses.pop().decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
@@ -433,7 +434,7 @@ class EBB3:
         return response
       except RuntimeError as re:
         logging.error(f'USB ERROR: {re}.\n' +
-                f'    Command: {request}\n    Response: {response}')
+                f'    Command: {request}\n    Response (1 of {num_received_lines}): {response}')
         if num_tries > 1: # recursive case
             self.retry_count += 1
             logging.error(f'    RETRY {self.retry_count}')
