@@ -423,7 +423,7 @@ class EBB3:
             response = responses.pop().decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
 
         if len(response) == 0:
-            raise RuntimeError(f'Timed out with no response (or empty responses) after {n_poll_count} polls.')
+            raise EBB3SerialTimeoutError(f'Timed out with no response (or empty responses) after {n_poll_count} polls.')
 
         if not response.startswith(request_name):
             raise RuntimeError(f'Received unexpected response after {n_poll_count} polls.')
@@ -432,9 +432,19 @@ class EBB3:
             raise RuntimeError(f'Error reported by EBB after {n_poll_count} polls.')
 
         return response
-      except RuntimeError as re:
-        logging.error(f'USB ERROR: {re}.\n' +
+      except (EBB3SerialTimeoutError, RuntimeError) as err:
+        logging.error(f'USB ERROR: {err}.\n' +
                 f'    Command: {request}\n    Response (1 of {num_received_lines}): {response}')
+
+        if type(err) is EBB3SerialTimeoutError:
+            # it may not be appropriate to retry without knowing whether or not EBB received and executed the command
+            # if the command was idempotent, we can safely retry:
+            #       if the command starts with "Q", it's a query and can be safely retried
+            #       also "SP" (set pen position) and "CU" (configure settings)
+            if request_name[0] != 'Q' and request_name not in ["SP", "CU"]:
+                raise
+
+        # retries!
         if num_tries > 1: # recursive case
             self.retry_count += 1
             logging.error(f'    RETRY {self.retry_count}')
@@ -639,3 +649,7 @@ def find_named(port_name=None):
         if needle in p_2:
             return port[0]  # Success; EBB found by port match.
     return None
+
+
+class EBB3SerialTimeoutError (RuntimeError):
+    pass
