@@ -392,13 +392,9 @@ class EBB3:
         `num_tries` is the number of times to try if something went wrong. "1" means no retries.
         return None if there's an error, otherwise return the response bytestring
       '''
-      try:
-        readline_poll_max = 40
+      readline_poll_max = 40
 
-        # send the request
-        self.port.write((request + '\r').encode('ascii'))
-
-        # and wait for a response
+      def _wait_for_response():
         responses = []
         n_poll_count = 0
         # poll for response until we get any response and self.port indicates there is no more input, a maximum of readline_poll_max times  
@@ -416,14 +412,25 @@ class EBB3:
             else: # previous line is incomplete; don't create a new entry in responses
                 responses[-1] += in_bytes
 
-        # evaluate the responses
-        num_received_lines = len(responses)
         response = ''
         while len(response) == 0 and len(responses) != 0:
             response = responses.pop().decode('ascii').strip() # we only care about the last response; previous responses are probably related to prior writes and irrelevant here
+        return response, responses, n_poll_count
+
+      try:
+        # send the request
+        self.port.write((request + '\r').encode('ascii'))
+
+        # and wait for a response
+        response, prev_responses, n_poll_count = _wait_for_response()
 
         if len(response) == 0:
-            raise EBB3SerialTimeoutError(f'Timed out with no response (or empty responses) after {n_poll_count} polls.')
+            # timeout--try to recover. maybe EBB is waiting for an end command character that never arrived
+            logging.error('Timed out, attempting to recover ...')
+            self.port.write('\r'.encode('ascii'))
+            response, prev_responses, n_poll_count = _wait_for_response()
+            if len(response) == 0:
+                raise EBB3SerialTimeoutError(f'Timed out with no response (or empty responses) after {n_poll_count} polls.')
 
         if not response.startswith(request_name):
             raise RuntimeError(f'Received unexpected response after {n_poll_count} polls.')
@@ -434,7 +441,7 @@ class EBB3:
         return response
       except (EBB3SerialTimeoutError, RuntimeError) as err:
         logging.error(f'USB ERROR: {err}.\n' +
-                f'    Command: {request}\n    Response (1 of {num_received_lines}): {response}')
+                f'    Command: {request}\n    Response: {response}\n    Previous responses: {prev_responses}')
 
         if type(err) is EBB3SerialTimeoutError:
             # it may not be appropriate to retry without knowing whether or not EBB received and executed the command
@@ -442,6 +449,7 @@ class EBB3:
             #       if the command starts with "Q", it's a query and can be safely retried
             #       also "SP" (set pen position) and "CU" (configure settings)
             if request_name[0] != 'Q' and request_name not in ["SP", "CU"]:
+                logging.error('timed out on a non-idempotent request {request}')
                 raise
 
         # retries!
