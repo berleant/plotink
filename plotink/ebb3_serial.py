@@ -443,7 +443,8 @@ class EBB3:
         logging.error(f'USB ERROR: {err}.\n' +
                 f'    Command: {request}\n    Response: {response}\n    Previous responses: {prev_responses}')
 
-        if type(err) is EBB3SerialTimeoutError:
+        #if type(err) is EBB3SerialTimeoutError:
+        if 'Timed out' in err.args[0]:
             # it may not be appropriate to retry without knowing whether or not EBB received and executed the command
             # if the command was idempotent, we can safely retry:
             #       if the command starts with "Q", it's a query and can be safely retried
